@@ -1,2 +1,2 @@
 # RayBricks
-Simple Brick Breaker writing with raylib-lua-sol
+Simple Brick Breaker made with raylib-lua-sol
