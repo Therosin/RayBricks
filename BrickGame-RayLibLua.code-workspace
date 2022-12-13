@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"vscode-lua-format.configPath": "./lua-format.cfg",
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Debug Custom Lua Environment",
+				"type": "lua-local",
+				"request": "launch",
+				"program": {
+					"command": "./start_game.bat",
+				},
+				"args": [
+					"${workspaceFolder}/game/main.lua"
+				]
+			}
+		],
+		"compounds": []
+	}
+}
