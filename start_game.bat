@@ -23,4 +23,4 @@ cls
 echo Starting BrickGame...
 echo.
 echo.
-.\bin\raylib-lua-sol.exe
+.\raylib\raylib-lua-sol.exe .\build\main.lua

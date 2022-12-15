@@ -6,14 +6,24 @@
         {
             "label": "Start Game",
             "type": "shell",
-            "command": "${workspaceFolder}/bin/raylib-lua-sol.exe",
+            "command": "${workspaceFolder}/raylib/raylib-lua-sol.exe",
             "args": [
-                "${workspaceFolder}/main.lua"
-            ],
+                "${workspaceFolder}/build/main.lua"
+            ]
+        },
+        {
+            "label": "Build Scripts",
+            "type": "shell",
+            "command": "${workspaceFolder}/build.bat",
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Rebuild and Run",
+            "type": "shell",
+            "command": "${workspaceFolder}/build.bat && ${workspaceFolder}/raylib/raylib-lua-sol.exe ${workspaceFolder}/build/main.lua",
         }
     ]
 }

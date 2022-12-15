@@ -5,6 +5,14 @@
 		}
 	],
 	"settings": {
+		"Lua.workspace.library": [
+			"${workspaceFolder}/raylib/",
+		],
+		"Lua.workspace.ignoreDir": [
+			".vscode",
+			"tools",
+			"build",
+		],
 		"vscode-lua-format.configPath": "./lua-format.cfg",
 	},
 	"launch": {
@@ -17,9 +25,16 @@
 				"program": {
 					"command": "./start_game.bat",
 				},
-				"args": [
-					"${workspaceFolder}/game/main.lua"
-				]
+				"preLaunchTask": "Build Scripts",
+			},
+			{
+				"name": "Current File",
+				"type": "lua-local",
+				"request": "launch",
+				"program": {
+					"lua": "lua",
+					"file": "${file}"
+				}
 			}
 		],
 		"compounds": []
