@@ -84,7 +84,7 @@ function Ball:CalculateBounceAngle(paddle)
     if not GameState:Get("Game.Debug") then
         print(string.format("Ball middle: %s, Paddle middle: %s, DistanceFromMiddle: %s, Angle: %s", ballMiddle, paddleMiddle, distanceFromMiddle, angle))
     end
-    return angle
+    return angle * -90
 end
 
 

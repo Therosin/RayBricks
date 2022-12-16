@@ -5,6 +5,7 @@
 		}
 	],
 	"settings": {
+		"Lua.runtime.version": "Lua 5.3",
 		"Lua.workspace.library": [
 			"${workspaceFolder}/raylib/",
 		],

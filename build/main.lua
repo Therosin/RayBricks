@@ -88,7 +88,7 @@ function Ball:CalculateBounceAngle(paddle)
     if not GameState:Get("Game.Debug") then
         print(string.format("Ball middle: %s, Paddle middle: %s, DistanceFromMiddle: %s, Angle: %s", ballMiddle, paddleMiddle, distanceFromMiddle, angle))
     end
-    return angle
+    return angle * -90
 end
 
 
@@ -1595,9 +1595,9 @@ local brickWidth = 50
 local brickHeight = 20
 -- ─── Player Paddle ───────────────────────────────────────────────────────────
 local paddleLength = 50
-local paddleHeight = 20
+local paddleHeight = 10
 local paddleColor = DARKBLUE
-local paddleSpeed = 5
+local paddleSpeed = 6
 local paddleSafeZone = 2
 -- ─── Ball ────────────────────────────────────────────────────────────────────
 local defaultBallSpeed = 3
@@ -1612,7 +1612,7 @@ GameEvents = Events.new()
 
 -- ─── Paddle ──────────────────────────────────────────────────────────────────
 local paddlePositionX = screenWidth / 2 - paddleLength / 2;
-local paddlePositionY = screenHeight - 50;
+local paddlePositionY = screenHeight - 30;
 local isPaddleOnRightWall;
 local isPaddleOnLeftWall;
 
@@ -1626,7 +1626,7 @@ local isBallOnScreen = false;
 
 -- ─── Bricks ──────────────────────────────────────────────────────────────────
 local brickTypes = require "BrickTypes"
-local brickMap = {rows = 5, columns = 8, bricks = {}}
+local brickMap = {rows = 8, columns = 12, bricks = {}}
 local brickMapWidth = brickMap.columns * brickWidth
 local brickMapHeight = brickMap.rows * brickHeight
 local brickMapPosX = screenWidth / 2 - brickMapWidth / 2
@@ -1918,9 +1918,11 @@ local OnBrickHit = function(brick)
 end
 
 local OnBrickDestroy = function(brick)
+	Log("Brick Destroyed %s, %s is %s - Health %s", brick.row, brick.column, brick.type.Kind, brick.health)
 	local score = GameState:Get("GameState.Score")
 	GameState:Set("GameState.Score", score + brick.type.Score)
 	ballSpeed = ballSpeed + 0.5
+	paddleSpeed = paddleSpeed + 0.2
 end
 
 local function generateBricks()
@@ -2007,6 +2009,22 @@ local function drawPlayerPaddle()
 	return string.format("Paddle Position: X:%i Y:%i isFrozen:%s", playerPaddle.position.x, playerPaddle.position.y, tostring(playerPaddle.isFrozen))
 end
 
+--- check paddle collision
+--- if the paddle hits a wall it will bounce back in the opposite direction
+function checkPaddleCollision()
+	if (playerPaddle.position.x + paddleLength > screenWidth) then
+		playerPaddle.isOnRightWall = true
+		playerPaddle.position.x = screenWidth - paddleLength - 5
+		return
+	elseif (playerPaddle.position.x < 0) then
+		playerPaddle.isOnLeftWall = true
+		playerPaddle.position.x = 5
+		return
+	end
+	playerPaddle.isOnRightWall = false
+	playerPaddle.isOnLeftWall = false
+end
+
 GameEvents:register("GamePlay:MoveLeft", function()
 	playerPaddle:MoveLeft()
 end)
@@ -2074,16 +2092,17 @@ local function checkBallCollision()
 	local ballPosition = playerBall.position
 	local collision;
 
+	paddleRect = Rectangle(paddlePosition.x, paddlePosition.y, paddleLength + paddleSafeZone, paddleHeight)
+
 	-- check if ball hits paddle
-	if (ballPosition.y + ballRadius > paddlePosition.y + 1) then
-		if (ballPosition.x > paddlePosition.x - paddleSafeZone and ballPosition.x < (paddlePosition.x + paddleLength) + paddleSafeZone) then
-			collision = "Paddle"
-			isBallOnPaddle = true
-			-- deflect the ball off the paddle based on where it hits
-			ballDirection = playerBall:CalculateBounceAngle(playerPaddle)
-		else
-			isBallOnPaddle = false
-		end
+	if CheckCollisionCircleRec(playerBall.position, ballRadius, paddleRect) then
+		collision = "Paddle"
+		isBallOnPaddle = true
+		-- deflect the ball off the paddle based on where it hits
+		---ballDirection = playerBall:CalculateBounceAngle(playerPaddle)
+		ballDirection = (360 - ballDirection) + Ball:CalculateBounceAngle(playerPaddle) % 360
+	else
+		isBallOnPaddle = false
 	end
 
 	-- check if ball hits walls
@@ -2125,30 +2144,35 @@ local function drawScores()
 end
 
 local function drawDebug()
-	local GameState = GameState:Get("GameState")
-	Utils.DrawTextBox(10, 60, 185, 190, Fade(DARKBLUE, 0.6), SKYBLUE, 16, {
+	Utils.DrawTextBox(10, 60, 185, 250, Fade(DARKBLUE, 0.6), SKYBLUE, 16, {
 		-- 1st line
-		string.format("- Ball Pos: %s, %s", tostring(ballPositionX), tostring(ballPositionX)),
+		string.format("- Ball Pos: %s, %s", tostring(playerBall.position.x), tostring(playerBall.position.y)),
 		-- 2nd line
-		string.format("- Ball Dir: %i", ballDirection),
+		string.format("- Ball Dir: %s", tostring(ballDirection)),
 		-- 3rd line
-		string.format("- Ball Speed: %i", ballSpeed),
+		string.format("- Ball Speed: %s", tostring(ballSpeed)),
 		-- 4th line
-		string.format("- Ball Radius: %i", ballRadius),
+		string.format("- Ball Radius: %s", tostring(ballRadius)),
 		-- 5th line
 		string.format("- Ball OnPaddle: %s", tostring(isBallOnPaddle)),
 		-- 6th line
-		string.format("- Paddle Pos: %i", paddlePositionX),
+		string.format("- Paddle Pos: %s", tostring(playerPaddle.position.x)),
 		-- 7th line
-		string.format("- Paddle Length: %i", paddleLength),
+		string.format("- Paddle Length: %s", tostring(playerPaddle.size.x)),
 		-- 8th line
-		string.format("- Paddle Speed: %i", paddleSpeed),
+		string.format("- Paddle Speed: %s", tostring(paddleSpeed)),
 		-- 9th line
-		string.format("- Paddle R Wall: %s", tostring(isPaddleOnRightWall)),
+		string.format("- Paddle R Wall: %s", tostring(playerPaddle.isOnRightWall)),
 		-- 10th line
-		string.format("- Paddle L Wall: %s", tostring(isPaddleOnLeftWall)),
+		string.format("- Paddle L Wall: %s", tostring(playerPaddle.isOnLeftWall)),
 		-- 11th line
-		string.format("- Ball OnScreen: %s", tostring(isBallOnScreen))
+		string.format("- Ball OnScreen: %s", tostring(isBallOnScreen)),
+		-- 12th line
+		string.format("- InputEnabled: %s", tostring(GameState:Get("GamePlay.InputEnabled"))),
+		-- 13th line
+		string.format("- CurrentMenu: %s", tostring(GameState:Get("Game.CurrentMenu"))),
+		-- 14th line
+		string.format("- MenuSelection: %s", tostring(GameState:Get("Game.CurrentMenuSelection"))),
 	}, RAYWHITE)
 end
 
@@ -2196,14 +2220,15 @@ local function MainLoop()
 		-- ─── Drawing ─────────────────────────────────────────────────────────
 		BeginDrawing()
 		ClearBackground(RAYWHITE)
-		if (GameState:Get("GamePlay.Debug")) then drawDebug() end
-		print(drawMenu())
+		if (GameState:Get("Game.Debug")) then drawDebug() end
+		drawMenu()
 		if (GameState() == "InGame") then
 			drawBricks(brickMapPosX, brickMapPosY)
-			print(drawPlayerPaddle())
-			print(checkBallCollision())
-			print(checkBrickCollision(playerBall))
-			print(drawPlayerBall(ballDirection, ballSpeed, ballColor))
+			drawPlayerPaddle()
+			checkPaddleCollision()
+			checkBallCollision()
+			checkBrickCollision(playerBall)
+			drawPlayerBall(ballDirection, ballSpeed, ballColor)
 			drawScores()
 		end
 		EndDrawing()
